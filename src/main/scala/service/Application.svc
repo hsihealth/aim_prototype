@@ -19,16 +19,34 @@ partial message SystemCommand
 ## Application Management
 # Provide support for managing application definitions
 
+query AllicationList
+responds with Applications
+{
+  data        list[Appllication]  # list of applications
+}
+
 query ApplicationQuery extends EntityMessage
-responds with Application   # query for basic information of an application
+{
+   # query for basic information of an application
+   app_uuid   string  # UUID of the app
+}
+responds with Application
 
 query ApplicationDetailQuery extends EntityMessage
-responds with ApplicationDetail # query for detailed information of an application
+{
+  # query for detailed information of an application
+  app_uuid   string  # UUID of the app
+}
+responds with ApplicationDetail
 
-query AccessibleTenants extends EntityMessage responds with Tenants
+query AccessibleTenants extends EntityMessage
 {
   # Query for a list of tenants that can access the application in question
-  data        list[Tenant]
+  app_uuid   string  # UUID of the app
+}
+responds with Tenants
+{
+  data        list[Tenant]  # list of tenant
 }
 
 command EnsureApplication
