@@ -67,7 +67,7 @@ fails with CannotChangeApplication extends ErrorEvent
 command GrantTenantAccess extends EntityMessage
 {
   # Grant access of a tenant to the application
-  tenant      tenant          # tenant to which the access to the application will be granted
+  tenant      Tenant          # tenant to which the access to the application will be granted
 }
 emits TenantAccessGranted extends ApplicationTenant
 fails with ErrorEvent
@@ -75,7 +75,7 @@ fails with ErrorEvent
 command DenyTenantAccess extends EntityMessage
 {
   # Deny access of a tenant to the application
-  tenant      tenant          # tenant whose access to the application is revoked
+  tenant      Tenant          # tenant whose access to the application is revoked
 }
 emits TenantAccessDenied extends ApplicationTenant
 fails with ErrorEvent
@@ -137,14 +137,14 @@ query UsersQuery extends EntityMessage responds with Users
 
 command EnsureTenant {
   # Ensure existence of a tenant
-  name        string      # name of the tenent
+  name        string      # name of the tenant
   tenant_type enum [TENANT, COMPANY, PROVIDER, BASE]  # tenant type
 
   optional:
   description string          # description of the tenant
   id          [integer,string]# Primary key of the tenant
   is_active   boolean(true)   # flag to indicate if the tenant is active
-  parent      Tenant          # parent tenent
+  parent      Tenant          # parent tenant
 }
 emits TenantUpdated extends Tenant
 fails with CannotChangeTenant extends ErrorEvent
@@ -160,7 +160,7 @@ fails with CannotChangeTenant extends ErrorEvent # Activate a tenant
 command EnsureTenantGroup extends EntityMessage
 {
   # Ensure an existence of a tenant group for a tenant
-  name        string    # Name of the tenent group
+  name        string    # Name of the tenant group
   subsidiary  Tenant    # subsidiary tenant the group is for
 
   optional:

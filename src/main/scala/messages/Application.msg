@@ -33,7 +33,7 @@ document ApplicationTenant
   # A link between an application and tenant who is granted access to the application
   required:
   application Application   # Application that grants the linked tenant for access
-  tenant      tenant        # Tenant having access to the application
+  tenant      Tenant        # Tenant having access to the application
 }
 
 document AuthenticationInfo

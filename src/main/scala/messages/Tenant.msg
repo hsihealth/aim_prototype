@@ -9,7 +9,7 @@ document Tenant
   is_active   boolean(true) # flag to indicate if the tenant is still active
 
   optional:
-  parent       Tenent       # parent tenant; may be nil for top level tenant
+  parent       Tenant       # parent tenant; may be nil for top level tenant
 }
 
 document TenantDetail
@@ -23,7 +23,7 @@ document TenantDetail
   is_active   boolean       # flag to indicate if the tenant is still active
 
   optional:
-  parent          Tenent              # parent tenant; may be nil for top level tenant
+  parent          Tenant              # parent tenant; may be nil for top level tenant
   subsidiaries    list[Tenant]        # list of subsidiaries
   accessible_apps list[Application]   # list of accessible applications
   tenant_groups   list[TenantGroup]   # list of tenant groups
@@ -36,8 +36,8 @@ document TenantGroup
   # A tenant group set up for a tenant
   required:
   name            string        # Name of the group
-  target_tenant   Tanent        # (sub) target tenant the group is set up for
-  parent          Tenent        # parent tenant this tenant group belongs to
+  target_tenant   Tenant        # (sub) target tenant the group is set up for
+  parent          Tenant        # parent tenant this tenant group belongs to
 
   optional:
   description     string        # description of the group
@@ -49,7 +49,7 @@ document RoleGroup
   # A role group set up for a tenant
   required:
   name            string        # name of the group
-  parent          Tenent        # parent tenant this role group belongs to
+  parent          Tenant        # parent tenant this role group belongs to
   app             Application   # application for which the role group is setup
 
   optional:
