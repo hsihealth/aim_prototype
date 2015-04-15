@@ -1,0 +1,138 @@
+service Tenant
+
+version 1.0
+author  "Alex"
+
+// partial message ErrorEvent {
+//   description string # the error message
+// }
+
+partial message EntityMessage {
+  uuid    string              # The UUID of the tenant entity to operate on
+}
+
+query TenantQuery extends EntityMessage responds with Tenant
+query TenantDetailQuery extends EntityMessage responds with TenantDetail
+
+// Get list of applications the tenant has access to
+query AccessibleApplicationsQuery extends EntityMessage responds with Applications
+{
+  data    list[Application]   # list of applications the tenant can access
+}
+
+// Get list of subsidiaries the tenant has
+query SubsidiariesQuery extends EntityMessage
+{
+  recursive   boolean         # flag to indicate if return result recursively
+}
+responds with Tanents
+{
+  data      list[Tenant]
+}
+
+// Get list of role groups defined for the tenant
+query RoleGroupsQuery extends EntityMessage responds with RoleGroups
+{
+  data      list[RoleGroup]
+}
+
+// Get list of tenant groups defined for the tenant
+query TenantGroupsQuery extends EntityMessage responds with TenantGroups
+{
+  data      list[TenantGroup]
+}
+
+// Get list of users belonging to the tenant
+query UsersQuery extends EntityMessage responds with Users
+{
+  data      list[User]
+}
+
+
+command EnsureTenant {
+  name        string
+  description string
+  tenant_type enum [TENANT, COMPANY, PROVIDER, BASE]
+
+  optional:
+  uuid        string          # UUID of the tenant
+  is_active   boolean(true)   # flag to indicate if the tenant is active
+  parent      Tenant          # parent tenent
+}
+emits TenantUpdated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent
+
+command DeactivateTenant extends EntityMessage
+emits TenantDeactivated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent
+
+command ActivateTenant extends EntityMessage
+emits TenantActivated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent
+
+command EnsureTenantGroup extends EntityMessage
+{
+  name        string
+  subsidiary  Tenant
+
+  optional:
+  description string
+}
+emits TenantGroupChanged extends TenantGroup
+fails with TenantGroupNotChanged extends ErrorEvent
+
+command EnsureRoleGroup extends EntityMessage
+{
+  name        string
+  application Application     # The application for which the role group is added
+  roles       list[string]    # list of subset of application roles the group has
+
+  optional:
+  description string
+}
+emits RoleGroupChanged extends RoleGroup
+fails with RoleGroupNotChanged extends ErrorEvent
+
+command EnsureUser extends EntityMessage
+{
+  email string              # email of the user
+
+  optional:
+  password string           # initial password
+  is_active boolean(true)   # flag to indicate if
+}
+emits UserUpdated extends User
+fails with CannotChangeUser extends ErrorEvent
+
+
+command AssignUserToTenantGroup extends EntityMessage
+{
+  id          string        # user's id
+  data_group  TenantGroup   # data group to assign the uset to
+}
+emits UserAssignedToTenantGroup extends UserTenantGroup
+fails with UserNotAssignedToTenantGroup extends ErrorEvent
+
+command RemoveUserFromTenantGroup extends EntityMessage
+{
+  id          string        # user's id
+  data_group  TenantGroup   # data group to assign the uset to
+}
+emits UserRemovedFromTenantGroup extends UserTenantGroup
+fails with UserNotRemovedFromTenantGroup extends ErrorEvent
+
+command AssignUserToRoleGroup extends EntityMessage
+{
+  id          string        # user's id
+  role_group  RoleGroup     # role group to assign the uset to
+}
+emits UserAssignedToRoleGroup extends UserRoleGroup
+fails with UserNotAssignedToRoleGroup extends ErrorEvent
+
+command RemoveUserFromRoleGroup extends EntityMessage
+{
+  id          string        # user's id
+  role_group  RoleGroup     # role group to assign the uset to
+}
+emits UserRemoveFromRoleGroup extends UserRoleGroup
+fails with UserNotRemoveFromRoleGroup extends ErrorEvent

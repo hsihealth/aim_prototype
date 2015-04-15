@@ -1,0 +1,63 @@
+service Application
+
+version 1.0
+author "Alex"
+
+// partial message ErrorEvent {
+//   description string # the error message
+// }
+
+partial message EntityMessage
+{
+  uuid        string          # The UUID of the application entity to operate on
+}
+
+query ApplicationQuery extends EntityMessage
+responds with Application
+
+query ApplicationDetailQuery extends EntityMessage
+responds with ApplicationDetail
+
+query AccessibleTenants extends EntityMessage responds with Tenants
+{
+  data        list[Tenant]
+}
+
+command EnsureApplication
+{
+  name        string
+  description string
+
+  optional:
+  uuid        string          # UUID of the application
+  roles       list[string]    # List of application defined roles
+}
+emits ApplicationUpdated extends Appllication
+fails with CannotChangeApplication extends ErrorEvent
+
+command GrantTenantAccess extends EntityMessage
+{
+  tenant      tenant          # tenant to which the access to the application will be granted
+}
+emits TenantAccessGranted extends ApplicationTenant
+fails with ErrorEvent
+
+command DenyTenantAccess extends EntityMessage
+{
+  tenant      tenant          # tenant whose access to the application is revoked
+}
+emits TenantAccessDenied extends ApplicationTenant
+fails with ErrorEvent
+
+command AuthenticateUser extends EntityMessage
+{
+  email     string    # email of the user to be authenticated
+  password  string    # password of the user to be authenticated
+}
+emits UserAuthenticated extends AuthenticationInfo
+fails with AuthenticationFailed extends ErrorEvent
+{
+  optional:
+  user      User      # user that can't be authenticated; Nil if non-existent
+}
+

@@ -1,0 +1,40 @@
+service User
+
+version 1.0
+author  "Alex"
+
+// partial message ErrorEvent {
+//   description string # the error message
+// }
+
+partial message EntityMessage {
+  id string   # id of the user
+}
+
+//A marker interface to indicate control bus commands
+// partial message SystemCommand
+
+query UserQuery extends EntityMessage responds with User
+
+query UserDetailQuery extends EntityMessage responds with UserDetail
+
+// Get list of applications the user has access to
+query AuthorizedApplicationsQuery extends EntityMessage responds with Applications
+{
+  data    list[Application]   # list of applications the tenant can access
+}
+
+command ChangeUserPassword extends EntityMessage {
+  password string   # password to change
+}
+emits UserPasswordChanged extends User
+fails with CannotChangeUser extends ErrorEvent
+
+command DeactivateUser extends EntityMessage
+emits UserDeactivated extends User
+fails with CannotChangeUser extends ErrorEvent
+
+command ActivateUser extends EntityMessage
+emits UserActivated extends User
+fails with CannotChangeUser extends ErrorEvent
+
