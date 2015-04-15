@@ -10,6 +10,7 @@ document User
 
 document UserDetail
 {
+  # details information of a user
   required:
   id          string    # entity ID of the user
   email       string    # email of the user

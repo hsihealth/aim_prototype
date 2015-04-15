@@ -3,32 +3,43 @@ service Application
 version 1.0
 author "Alex"
 
-// partial message ErrorEvent {
-//   description string # the error message
-// }
-
-partial message EntityMessage
-{
-  uuid        string          # The UUID of the application entity to operate on
+partial message ErrorEvent {
+  description string          # the error message
 }
 
+// Type of primary key depends on the persistent store we choose
+partial message EntityMessage
+{
+  id    [integer,string]      # The primary key of the entity to operate on
+}
+
+//A marker interface to indicate control bus commands
+partial message SystemCommand
+
+## Application Management
+# Provide support for managing application definitions
+
 query ApplicationQuery extends EntityMessage
-responds with Application
+responds with Application   # query for basic information of an application
 
 query ApplicationDetailQuery extends EntityMessage
-responds with ApplicationDetail
+responds with ApplicationDetail # query for detailed information of an application
 
 query AccessibleTenants extends EntityMessage responds with Tenants
 {
+  # Query for a list of tenants that can access the application in question
   data        list[Tenant]
 }
 
 command EnsureApplication
 {
+  # Ensure existent of an application
+  required:
   name        string
   description string
 
   optional:
+  id          [integer,string]# primary key of the application
   uuid        string          # UUID of the application
   roles       list[string]    # List of application defined roles
 }
@@ -37,6 +48,7 @@ fails with CannotChangeApplication extends ErrorEvent
 
 command GrantTenantAccess extends EntityMessage
 {
+  # Grant access of a tenant to the application
   tenant      tenant          # tenant to which the access to the application will be granted
 }
 emits TenantAccessGranted extends ApplicationTenant
@@ -44,6 +56,7 @@ fails with ErrorEvent
 
 command DenyTenantAccess extends EntityMessage
 {
+  # Deny access of a tenant to the application
   tenant      tenant          # tenant whose access to the application is revoked
 }
 emits TenantAccessDenied extends ApplicationTenant
@@ -51,6 +64,7 @@ fails with ErrorEvent
 
 command AuthenticateUser extends EntityMessage
 {
+  # Authenticate a user to an application
   email     string    # email of the user to be authenticated
   password  string    # password of the user to be authenticated
 }
@@ -60,4 +74,171 @@ fails with AuthenticationFailed extends ErrorEvent
   optional:
   user      User      # user that can't be authenticated; Nil if non-existent
 }
+
+
+## Tenant Management
+# Provide support to managing tenants
+
+query TenantQuery extends EntityMessage responds with Tenant # query basic information of a tenant
+query TenantDetailQuery extends EntityMessage responds with TenantDetail # query detailed information of a tenant
+
+query AccessibleApplicationsQuery extends EntityMessage responds with Applications
+{
+  # Get list of applications the tenant has access to
+  data    list[Application]   # list of applications the tenant can access
+}
+
+query SubsidiariesQuery extends EntityMessage
+{
+  # Get list of subsidiaries the tenant has
+  recursive   boolean         # flag to indicate if return result recursively
+}
+responds with Tanents
+{
+  data      list[Tenant]
+}
+
+query RoleGroupsQuery extends EntityMessage responds with RoleGroups
+{
+  # Get list of role groups defined for the tenant
+  data      list[RoleGroup]
+}
+
+query TenantGroupsQuery extends EntityMessage responds with TenantGroups
+{
+  # Get list of tenant groups defined for the tenant
+  data      list[TenantGroup]
+}
+
+query UsersQuery extends EntityMessage responds with Users
+{
+  # Get list of users belonging to the tenant
+  data      list[User]
+}
+
+
+command EnsureTenant {
+  # Ensure existence of a tenant
+  name        string      # name of the tenent
+  tenant_type enum [TENANT, COMPANY, PROVIDER, BASE]  # tenant type
+
+  optional:
+  description string          # description of the tenant
+  id          [integer,string]# Primary key of the tenant
+  is_active   boolean(true)   # flag to indicate if the tenant is active
+  parent      Tenant          # parent tenent
+}
+emits TenantUpdated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent
+
+command DeactivateTenant extends EntityMessage
+emits TenantDeactivated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent # Deactivate a tenant
+
+command ActivateTenant extends EntityMessage
+emits TenantActivated extends Tenant
+fails with CannotChangeTenant extends ErrorEvent # Activate a tenant
+
+command EnsureTenantGroup extends EntityMessage
+{
+  # Ensure an existence of a tenant group for a tenant
+  name        string    # Name of the tenent group
+  subsidiary  Tenant    # subsidiary tenant the group is for
+
+  optional:
+  description string    # description of the tenant group
+}
+emits TenantGroupChanged extends TenantGroup
+fails with TenantGroupNotChanged extends ErrorEvent
+
+
+command EnsureRoleGroup extends EntityMessage
+{
+  # Ensure existence of role group for a tenant
+  name        string          # Name of the role group
+  application Application     # The application for which the role group is added
+  roles       list[string]    # list of subset of application roles the group has
+
+  optional:
+  description string          # description of the role group
+}
+emits RoleGroupChanged extends RoleGroup
+fails with RoleGroupNotChanged extends ErrorEvent
+
+command EnsureUser extends EntityMessage
+{
+  # Ensure an existence of a user of the tenant
+  email string              # email of the user
+
+  optional:
+  password string           # initial password
+  is_active boolean(true)   # flag to indicate if
+}
+emits UserUpdated extends User
+fails with CannotChangeUser extends ErrorEvent
+
+
+command AssignUserToTenantGroup extends EntityMessage
+{
+  # Assign use to a tenant group
+  id          string        # user's id
+  data_group  TenantGroup   # data group to assign the uset to
+}
+emits UserAssignedToTenantGroup extends UserTenantGroup
+fails with UserNotAssignedToTenantGroup extends ErrorEvent
+
+command RemoveUserFromTenantGroup extends EntityMessage
+{
+  # Remove a user from the tenant group
+  id          string        # user's id
+  data_group  TenantGroup   # data group to assign the uset to
+}
+emits UserRemovedFromTenantGroup extends UserTenantGroup
+fails with UserNotRemovedFromTenantGroup extends ErrorEvent
+
+command AssignUserToRoleGroup extends EntityMessage
+{
+  # Assign a uset to a role group
+  id          string        # user's id
+  role_group  RoleGroup     # role group to assign the uset to
+}
+emits UserAssignedToRoleGroup extends UserRoleGroup
+fails with UserNotAssignedToRoleGroup extends ErrorEvent
+
+command RemoveUserFromRoleGroup extends EntityMessage
+{
+  # Remove a user from the role group
+  id          string        # user's id
+  role_group  RoleGroup     # role group to assign the uset to
+}
+emits UserRemoveFromRoleGroup extends UserRoleGroup
+fails with UserNotRemoveFromRoleGroup extends ErrorEvent
+
+## User Management
+# Provide support to user management
+
+query UserQuery extends EntityMessage responds with User  # Query basic user information
+
+query UserDetailQuery extends EntityMessage responds with UserDetail # Query detailed user information
+
+query AuthorizedApplicationsQuery extends EntityMessage responds with Applications
+{
+  # Get list of applications the user has access to
+  data    list[Application]   # list of applications the tenant can access
+}
+
+command ChangeUserPassword extends EntityMessage {
+  # Change a user's password
+  password string   # password to change
+}
+emits UserPasswordChanged extends User
+fails with CannotChangeUser extends ErrorEvent
+
+command DeactivateUser extends EntityMessage
+emits UserDeactivated extends User
+fails with CannotChangeUser extends ErrorEvent # Deactivate a user
+
+command ActivateUser extends EntityMessage
+emits UserActivated extends User
+fails with CannotChangeUser extends ErrorEvent # Activate a user
 

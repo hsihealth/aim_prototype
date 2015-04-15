@@ -33,41 +33,45 @@ document TenantDetail
 
 document TenantGroup
 {
+  # A tenant group set up for a tenant
   required:
-  name        string
-  subsidiary  Tanent
+  name            string        # Name of the group
+  target_tenant   Tanent        # (sub) target tenant the group is set up for
+  parent          Tenent        # parent tenant this tenant group belongs to
 
   optional:
-  parent      Tenent        # parent tenant this tenant group belongs to
-  description string
-  user_ids    list[string]  # list of ID of users assigned to the group
+  description     string        # description of the group
+  user_ids        list[string]  # list of ID of users assigned to the group
 }
 
 document RoleGroup
 {
+  # A role group set up for a tenant
   required:
-  name        string        # name of the group
-  parent      Tenent        # parent tenant this role group belongs to
-  app         Application   # application for which the role group is designed
+  name            string        # name of the group
+  parent          Tenent        # parent tenant this role group belongs to
+  app             Application   # application for which the role group is setup
 
   optional:
-  description string
-  user_ids    list[string]  # list of IDs of users assigned to the group
-  roles       list[string]  # name of subset of roles from the application
+  description     string        # Description of the group
+  user_ids        list[string]  # list of IDs of users assigned to the group
+  roles           list[string]  # name of subset of roles from the application
 }
 
 document UserTenantGroup
 {
+  # a link between a user and tenant group the user is assgined to
   required:
-  user          User
-  tenant_group  TenantGroup
+  user            User          # User to be linked to the group
+  tenant_group    TenantGroup   # Tenant group the user may be assigned to
 }
 
 document UserRoleGroup
 {
+  # A link between a user and a role group the user is assigned to
   required:
-  user        User
-  role_group  RoleGroup
+  user            User          # User to be linked to the group
+  role_group      RoleGroup     # role group the user may be assigned to
 }
 
 
